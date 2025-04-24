@@ -1,0 +1,2 @@
+Analyzing configs\outputs.conf... (Simulating API Call)
+- Suggest adding an `index = your_index_name` line

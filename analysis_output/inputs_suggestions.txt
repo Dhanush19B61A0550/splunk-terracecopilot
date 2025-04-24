@@ -1,0 +1,2 @@
+Analyzing configs\inputs.conf... (Simulating API Call)
+- Suggest enabling `disabled = true` for unused monitors
