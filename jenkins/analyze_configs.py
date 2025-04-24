@@ -9,59 +9,54 @@ def suggest_updates(file_path):
         sys.exit(1)
 
     print(f"Analyzing {file_path}... (Simulating API Call)")
-    time.sleep(2)
+    time.sleep(1)
 
     with open(file_path, 'r') as f:
         lines = f.readlines()
 
     suggestions = []
-    current_stanza = []
-    stanza_start_line = 0
-    inside_stanza = False
+    stanza_start_line = None
+    stanza_lines = []
+    line_num = 0
 
-    for idx, line in enumerate(lines):
-        stripped = line.strip()
+    for i, line in enumerate(lines):
+        line_num = i + 1
+        line = line.strip()
 
-        # If new monitor stanza starts
-        if stripped.startswith('[monitor://'):
-            if current_stanza:
-                # analyze previous stanza
-                stanza_text = ''.join(current_stanza)
-                if 'index =' not in stanza_text:
-                    suggestions.append(f"Stanza starting at line {stanza_start_line+1}: Missing `index = your_index_name`")
-                current_stanza = []
+        # New stanza starts
+        if line.startswith('[') and line.endswith(']'):
+            if stanza_lines:
+                # Analyze previous stanza
+                suggestions += analyze_stanza(stanza_start_line, stanza_lines)
+            stanza_start_line = line_num
+            stanza_lines = [line]
+        elif stanza_lines:
+            stanza_lines.append(line)
 
-            inside_stanza = True
-            stanza_start_line = idx
-            current_stanza.append(line)
-
-        elif inside_stanza and (stripped == '' or stripped.startswith('[')):
-            # End of stanza, analyze
-            stanza_text = ''.join(current_stanza)
-            if 'index =' not in stanza_text:
-                suggestions.append(f"Stanza starting at line {stanza_start_line+1}: Missing `index = your_index_name`")
-            current_stanza = []
-            inside_stanza = False
-
-            # if next line starts a new stanza, start collecting again
-            if stripped.startswith('[monitor://'):
-                inside_stanza = True
-                stanza_start_line = idx
-                current_stanza.append(line)
-
-        elif inside_stanza:
-            current_stanza.append(line)
-
-    # analyze last stanza if any
-    if current_stanza:
-        stanza_text = ''.join(current_stanza)
-        if 'index =' not in stanza_text:
-            suggestions.append(f"Stanza starting at line {stanza_start_line+1}: Missing `index = your_index_name`")
+    # Analyze last stanza
+    if stanza_lines:
+        suggestions += analyze_stanza(stanza_start_line, stanza_lines)
 
     if not suggestions:
         suggestions.append("No suggestions found.")
-
+    
     return suggestions
+
+
+def analyze_stanza(start_line, stanza_lines):
+    stanza_text = "\n".join(stanza_lines)
+    missing = []
+
+    if not any(re.match(r'^\s*index\s*=', line, re.IGNORECASE) for line in stanza_lines):
+        missing.append("`index = your_index_name`")
+    if not any(re.match(r'^\s*sourcetype\s*=', line, re.IGNORECASE) for line in stanza_lines):
+        missing.append("`sourcetype = your_sourcetype`")
+    if not any(re.match(r'^\s*disabled\s*=', line, re.IGNORECASE) for line in stanza_lines):
+        missing.append("`disabled = true|false`")
+
+    if missing:
+        return [f"Stanza starting at line {start_line}: Missing {', '.join(missing)}"]
+    return []
 
 
 if __name__ == '__main__':
