@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         GIT_REPO = 'https://github.com/Dhanush19B61A0550/splunk-terracecopilot.git'
-        PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'  // Set Python Path explicitly
+        PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'
     }
 
     stages {
@@ -54,11 +54,10 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'github_credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
                     script {
-                        // Encode the @ in emails to %40 for URL-safe git credentials
-                        def safeUser = GIT_USER.replaceAll('@', '%40')
-                        def gitUrl = "https://${safeUser}:${GIT_PASS}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git"
+                        def encodedUser = GIT_USER.replace('@', '%40')
+                        def gitUrl = "https://${encodedUser}:${GIT_PASS}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git"
 
-                        bat """
+                        writeFile file: 'push.bat', text: """
                             git config --global user.name "jenkins-bot"
                             git config --global user.email "jenkins@example.com"
                             git add analysis_output
@@ -66,6 +65,8 @@ pipeline {
                             git remote set-url origin ${gitUrl}
                             git push origin main
                         """
+
+                        bat 'push.bat'
                     }
                 }
             }
