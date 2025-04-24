@@ -53,14 +53,20 @@ pipeline {
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'github_credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                    bat '''
-                        git config --global user.name "jenkins-bot"
-                        git config --global user.email "jenkins@example.com"
-                        git add analysis_output
-                        git diff --cached --quiet || git commit -m "Add Terrace Copilot suggestions"
-                        git remote set-url origin https://%GIT_USER%:%GIT_PASS%@github.com/Dhanush19B61A0550/splunk-terracecopilot.git
-                        git push origin main
-                    '''
+                    script {
+                        // Encode the @ in emails to %40 for URL-safe git credentials
+                        def safeUser = GIT_USER.replaceAll('@', '%40')
+                        def gitUrl = "https://${safeUser}:${GIT_PASS}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git"
+
+                        bat """
+                            git config --global user.name "jenkins-bot"
+                            git config --global user.email "jenkins@example.com"
+                            git add analysis_output
+                            git diff --cached --quiet || git commit -m "Add Terrace Copilot suggestions"
+                            git remote set-url origin ${gitUrl}
+                            git push origin main
+                        """
+                    }
                 }
             }
         }
