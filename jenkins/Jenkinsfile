@@ -18,7 +18,7 @@ pipeline {
                 echo 'Checking Python version...'
                 bat """
                     echo Checking Python...
-                    "${PYTHON_PATH}" --version || echo Python not found!
+                    "${PYTHON_PATH}" --version || (echo Python not found! && exit 1)
                 """
             }
         }
@@ -56,8 +56,7 @@ pipeline {
                 git config --global user.name "jenkins-bot"
                 git config --global user.email "jenkins@example.com"
                 git add analysis_output
-                git commit -m "Add Terrace Copilot suggestions"
-                git push origin main
+                git diff --cached --quiet || (git commit -m "Add Terrace Copilot suggestions" && git push origin main)
                 '''
             }
         }
