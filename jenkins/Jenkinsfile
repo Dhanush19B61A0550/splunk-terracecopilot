@@ -4,6 +4,7 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/Dhanush19B61A0550/splunk-terracecopilot.git'
         PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'
+        GIT_USER = 'Dhanush19B61A0550'  // Your GitHub username
     }
 
     stages {
@@ -52,25 +53,15 @@ pipeline {
                 expression { return fileExists('analysis_output\\inputs_suggestions.txt') }
             }
             steps {
-                withCredentials([usernamePassword(credentialsId: 'github_credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
                     script {
-                        // Encode the @ in the email address
-                        def encodedUser = GIT_USER.replace('@', '%40')
-
-                        // Construct the Git URL with encoded credentials
-                        def gitUrl = "https://${encodedUser}:${GIT_PASS}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git"
-
-                        writeFile file: 'push.bat', text: """
+                        bat """
                             git config --global user.name "jenkins-bot"
                             git config --global user.email "jenkins@example.com"
                             git add analysis_output
                             git diff --cached --quiet || git commit -m "Add Terrace Copilot suggestions"
-                            git remote set-url origin ${gitUrl}
-                            git push origin main
+                            git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                         """
-
-                        // Run the bat file
-                        bat 'push.bat'
                     }
                 }
             }
