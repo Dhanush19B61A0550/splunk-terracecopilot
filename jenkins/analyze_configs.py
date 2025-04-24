@@ -11,14 +11,22 @@ def suggest_updates(file_path):
     time.sleep(2)
 
     with open(file_path, 'r') as f:
-        content = f.read()
+        lines = f.readlines()
 
     suggestions = []
-    if 'disabled = false' in content:
-        suggestions.append("- Suggest enabling `disabled = true` for unused monitors")
-    if 'index = ' not in content:
-        suggestions.append("- Suggest adding an `index = your_index_name` line")
-    
+    for i, line in enumerate(lines):
+        # Skip commented lines
+        if line.strip().startswith("#"):
+            continue
+
+        # Check for 'disabled = false'
+        if 'disabled = false' in line:
+            suggestions.append(f"Line {i + 1}: Suggest enabling `disabled = true` for unused monitors")
+        
+        # Check if 'index = ' is missing
+        if 'index = ' not in line:
+            suggestions.append(f"Line {i + 1}: Suggest adding an `index = your_index_name` line")
+
     if not suggestions:
         suggestions.append("No suggestions found.")
     
