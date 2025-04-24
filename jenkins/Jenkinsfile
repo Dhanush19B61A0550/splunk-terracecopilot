@@ -26,11 +26,11 @@ pipeline {
         stage('Run Terrace Copilot Analysis') {
             steps {
                 echo 'Running Terrace Copilot on config files...'
-                bat '''
-                mkdir analysis_output
-                python jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
-                python jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
-                '''
+                bat """
+                    mkdir analysis_output
+                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
+                """
             }
         }
 
