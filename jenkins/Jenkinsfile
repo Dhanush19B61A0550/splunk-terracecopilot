@@ -54,8 +54,10 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'github_credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
                     script {
-                        // Encode the email to safely include it in the URL
+                        // Encode the @ in the email address
                         def encodedUser = GIT_USER.replace('@', '%40')
+
+                        // Construct the Git URL with encoded credentials
                         def gitUrl = "https://${encodedUser}:${GIT_PASS}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git"
 
                         writeFile file: 'push.bat', text: """
