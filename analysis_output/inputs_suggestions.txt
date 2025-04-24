@@ -1,2 +1,2 @@
 Analyzing configs\inputs.conf... (Simulating API Call)
-Stanza starting at line 1: Missing `index = your_index_name`
+Stanza starting at line 1: Missing `index = your_index_name`, `disabled = true|false`
