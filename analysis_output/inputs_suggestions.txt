@@ -1,2 +1,3 @@
 Analyzing configs\inputs.conf... (Simulating API Call)
 Stanza starting at line 1: Missing `index = your_index_name`, `sourcetype = your_sourcetype`, `disabled = true|false`
+Stanza starting at line 9: Missing `index = your_index_name`
