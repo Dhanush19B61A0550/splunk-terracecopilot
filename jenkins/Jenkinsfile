@@ -38,11 +38,11 @@ pipeline {
             steps {
                 echo 'Showing suggestions from Terrace Copilot'
                 bat '''
-                echo Inputs.conf Suggestions:
-                type analysis_output\\inputs_suggestions.txt || echo No suggestions for inputs.conf
+                    echo Inputs.conf Suggestions:
+                    type analysis_output\\inputs_suggestions.txt || echo No suggestions for inputs.conf
 
-                echo Outputs.conf Suggestions:
-                type analysis_output\\outputs_suggestions.txt || echo No suggestions for outputs.conf
+                    echo Outputs.conf Suggestions:
+                    type analysis_output\\outputs_suggestions.txt || echo No suggestions for outputs.conf
                 '''
             }
         }
@@ -52,12 +52,16 @@ pipeline {
                 expression { return fileExists('analysis_output\\inputs_suggestions.txt') }
             }
             steps {
-                bat '''
-                git config --global user.name "jenkins-bot"
-                git config --global user.email "jenkins@example.com"
-                git add analysis_output
-                git diff --cached --quiet || (git commit -m "Add Terrace Copilot suggestions" && git push origin main)
-                '''
+                withCredentials([usernamePassword(credentialsId: 'github_credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    bat '''
+                        git config --global user.name "jenkins-bot"
+                        git config --global user.email "jenkins@example.com"
+                        git add analysis_output
+                        git diff --cached --quiet || git commit -m "Add Terrace Copilot suggestions"
+                        git remote set-url origin https://%GIT_USER%:%GIT_PASS%@github.com/Dhanush19B61A0550/splunk-terracecopilot.git
+                        git push origin main
+                    '''
+                }
             }
         }
     }
