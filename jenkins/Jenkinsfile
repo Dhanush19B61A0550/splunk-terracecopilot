@@ -3,12 +3,23 @@ pipeline {
 
     environment {
         GIT_REPO = 'https://github.com/Dhanush19B61A0550/splunk-terracecopilot.git'
+        PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'  // Set Python Path explicitly
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 git branch: 'main', url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Check Python Version') {
+            steps {
+                echo 'Checking Python version...'
+                bat """
+                    echo Checking Python...
+                    "${PYTHON_PATH}" --version || echo Python not found!
+                """
             }
         }
 
