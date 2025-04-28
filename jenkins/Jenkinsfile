@@ -53,7 +53,8 @@ pipeline {
                 bat """
                     if exist analysis_output rmdir /S /Q analysis_output
                     mkdir analysis_output
-                    "${PYTHON_PATH}" analyze_configs.py
+                    "${PYTHON_PATH}" scripts\\copilot_suggestor.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                    "${PYTHON_PATH}" scripts\\copilot_suggestor.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
                 """
             }
         }
@@ -111,3 +112,5 @@ pipeline {
         }
     }
 }
+
+
