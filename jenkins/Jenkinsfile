@@ -45,8 +45,8 @@ pipeline {
                         git config --global user.name "jenkins-bot"
                         git config --global user.email "jenkins@example.com"
 
-                        // Force add the files to ensure changes are captured
-                        git add -f configs/inputs.conf configs/outputs.conf
+                        // Ensure the files are staged
+                        git add configs/inputs.conf configs/outputs.conf
 
                         // Check git status again to see if changes are staged
                         git status
@@ -125,5 +125,6 @@ pipeline {
         }
     }
 }
+
 
 
