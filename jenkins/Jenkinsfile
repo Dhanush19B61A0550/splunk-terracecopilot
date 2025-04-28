@@ -5,7 +5,6 @@ pipeline {
         GIT_REPO = 'https://github.com/Dhanush19B61A0550/splunk-terracecopilot.git'
         GIT_USER = 'Dhanush19B61A0550'
         PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'
-        SPLUNK_LOCAL_DIR = 'C:\\Program Files\\SplunkUniversalForwarder\\etc\\system\\local'
     }
 
     stages {
@@ -13,16 +12,6 @@ pipeline {
             steps {
                 echo 'Cloning your GitHub repository...'
                 git branch: 'main', url: "${GIT_REPO}"
-            }
-        }
-
-        stage('Copy Updated Config Files') {
-            steps {
-                echo 'Copying Splunk config files into the repo...'
-                bat """
-                    copy /Y "${SPLUNK_LOCAL_DIR}\\inputs.conf" configs\\inputs.conf
-                    copy /Y "${SPLUNK_LOCAL_DIR}\\outputs.conf" configs\\outputs.conf
-                """
             }
         }
 
@@ -51,7 +40,7 @@ pipeline {
                         git config --global user.name "jenkins-bot"
                         git config --global user.email "jenkins@example.com"
                         git add configs/inputs.conf configs/outputs.conf
-                        git commit -m "Update configs from Splunk Universal Forwarder"
+                        git commit -m "Update configs from local changes"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
                 }
@@ -64,8 +53,7 @@ pipeline {
                 bat """
                     if exist analysis_output rmdir /S /Q analysis_output
                     mkdir analysis_output
-                    "${PYTHON_PATH}" scripts\\copilot_suggestor.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
-                    "${PYTHON_PATH}" scripts\\copilot_suggestor.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
+                    "${PYTHON_PATH}" analyze_configs.py
                 """
             }
         }
