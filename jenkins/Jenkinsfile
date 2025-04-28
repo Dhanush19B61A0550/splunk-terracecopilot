@@ -47,14 +47,14 @@ pipeline {
             }
         }
 
-        stage('Run Terrace Copilot Analysis') {
+        stage('Run Config Analysis') {
             steps {
-                echo 'Running Terrace Copilot analysis on config files...'
+                echo 'Running configuration analysis on config files...'
                 bat """
                     if exist analysis_output rmdir /S /Q analysis_output
                     mkdir analysis_output
-                    "${PYTHON_PATH}" scripts\\copilot_suggestor.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
-                    "${PYTHON_PATH}" scripts\\copilot_suggestor.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
+                    "${PYTHON_PATH}" scripts\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                    "${PYTHON_PATH}" scripts\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
                 """
             }
         }
@@ -98,7 +98,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
                     bat """
                         git add analysis_output
-                        git commit -m "Update Terrace Copilot suggestions"
+                        git commit -m "Update configuration analysis suggestions"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
                 }
@@ -112,5 +112,6 @@ pipeline {
         }
     }
 }
+
 
 
