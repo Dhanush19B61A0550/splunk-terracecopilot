@@ -1,2 +1,2 @@
 Analyzing configs\inputs.conf... (Simulating API Call)
-No suggestions found.
+Stanza starting at line 75: Missing `index = your_index_name`
