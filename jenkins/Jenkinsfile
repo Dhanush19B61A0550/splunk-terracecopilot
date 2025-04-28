@@ -3,66 +3,115 @@ pipeline {
 
     environment {
         GIT_REPO = 'https://github.com/Dhanush19B61A0550/splunk-terracecopilot.git'
+        GIT_USER = 'Dhanush19B61A0550'
         PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'
-        GIT_USER = 'Dhanush19B61A0550'  // Your GitHub username
+        SPLUNK_LOCAL_DIR = 'C:\\Program Files\\SplunkUniversalForwarder\\etc\\system\\local'
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Clone GitHub Repo') {
             steps {
+                echo 'Cloning your GitHub repository...'
                 git branch: 'main', url: "${GIT_REPO}"
             }
         }
 
-        stage('Check Python Version') {
+        stage('Copy Updated Config Files') {
             steps {
-                echo 'Checking Python version...'
+                echo 'Copying Splunk config files into the repo...'
                 bat """
-                    echo Checking Python...
-                    "${PYTHON_PATH}" --version || (echo Python not found! && exit 1)
+                    copy /Y "${SPLUNK_LOCAL_DIR}\\inputs.conf" configs\\inputs.conf
+                    copy /Y "${SPLUNK_LOCAL_DIR}\\outputs.conf" configs\\outputs.conf
                 """
+            }
+        }
+
+        stage('Check for Config Changes') {
+            steps {
+                script {
+                    def configChanges = bat(script: 'git status --porcelain configs/', returnStdout: true).trim()
+                    if (configChanges) {
+                        echo 'Detected changes in config files. Preparing to commit.'
+                        env.CONFIG_CHANGED = 'true'
+                    } else {
+                        echo 'No changes detected in config files.'
+                        env.CONFIG_CHANGED = 'false'
+                    }
+                }
+            }
+        }
+
+        stage('Commit and Push Config Changes') {
+            when {
+                expression { env.CONFIG_CHANGED == 'true' }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
+                    bat """
+                        git config --global user.name "jenkins-bot"
+                        git config --global user.email "jenkins@example.com"
+                        git add configs/inputs.conf configs/outputs.conf
+                        git commit -m "Update configs from Splunk Universal Forwarder"
+                        git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
+                    """
+                }
             }
         }
 
         stage('Run Terrace Copilot Analysis') {
             steps {
-                echo 'Running Terrace Copilot on config files...'
+                echo 'Running Terrace Copilot analysis on config files...'
                 bat """
+                    if exist analysis_output rmdir /S /Q analysis_output
                     mkdir analysis_output
-                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
-                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
+                    "${PYTHON_PATH}" scripts\\copilot_suggestor.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                    "${PYTHON_PATH}" scripts\\copilot_suggestor.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
                 """
             }
         }
 
-        stage('Show Suggestions') {
+        stage('Display Suggestions') {
             steps {
-                echo 'Showing suggestions from Terrace Copilot'
+                echo 'Displaying AI suggestions:'
                 bat '''
+                    echo -----------------------
                     echo Inputs.conf Suggestions:
-                    type analysis_output\\inputs_suggestions.txt || echo No suggestions for inputs.conf
+                    type analysis_output\\inputs_suggestions.txt
 
+                    echo -----------------------
                     echo Outputs.conf Suggestions:
-                    type analysis_output\\outputs_suggestions.txt || echo No suggestions for outputs.conf
+                    type analysis_output\\outputs_suggestions.txt
+                    echo -----------------------
                 '''
             }
         }
 
-        stage('Optional: Commit Suggestions') {
+        stage('Check for Suggestion Changes') {
+            steps {
+                script {
+                    def suggestionChanges = bat(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
+                    if (suggestionChanges) {
+                        echo 'Detected changes in suggestions. Preparing to commit.'
+                        env.SUGGESTIONS_CHANGED = 'true'
+                    } else {
+                        echo 'No changes detected in suggestions.'
+                        env.SUGGESTIONS_CHANGED = 'false'
+                    }
+                }
+            }
+        }
+
+        stage('Commit and Push Suggestions') {
             when {
-                expression { return fileExists('analysis_output\\inputs_suggestions.txt') }
+                expression { env.SUGGESTIONS_CHANGED == 'true' }
             }
             steps {
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
-                    script {
-                        bat """
-                            git config --global user.name "jenkins-bot"
-                            git config --global user.email "jenkins@example.com"
-                            git add analysis_output
-                            git diff --cached --quiet || git commit -m "Add Terrace Copilot suggestions"
-                            git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
-                        """
-                    }
+                    bat """
+                        git add analysis_output
+                        git commit -m "Update Terrace Copilot suggestions"
+                        git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
+                    """
                 }
             }
         }
@@ -70,7 +119,7 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline execution complete.'
+            echo 'Pipeline completed!'
         }
     }
 }
