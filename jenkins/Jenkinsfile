@@ -18,7 +18,9 @@ pipeline {
         stage('Check for Config Changes') {
             steps {
                 script {
-                    def configChanges = bat(script: 'git status --porcelain configs/', returnStdout: true).trim()
+                    // Check for changes in config files (inputs.conf, outputs.conf)
+                    def configChanges = bat(script: 'git status --porcelain configs/inputs.conf configs/outputs.conf', returnStdout: true).trim()
+                    echo "Git Status Output: ${configChanges}"  // To debug if changes are detected
                     if (configChanges) {
                         echo 'Detected changes in config files. Preparing to commit.'
                         env.CONFIG_CHANGED = 'true'
@@ -39,7 +41,8 @@ pipeline {
                     bat """
                         git config --global user.name "jenkins-bot"
                         git config --global user.email "jenkins@example.com"
-                        git add configs/inputs.conf configs/outputs.conf
+                        git add -f configs/inputs.conf configs/outputs.conf  // Force add files to avoid issues with tracking
+                        git status  // Check if files are staged correctly
                         git commit -m "Update configs from local changes"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
@@ -98,6 +101,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
                     bat """
                         git add analysis_output
+                        git status  // Check if suggestions are staged
                         git commit -m "Update configuration analysis suggestions"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
@@ -112,3 +116,4 @@ pipeline {
         }
     }
 }
+
