@@ -53,8 +53,8 @@ pipeline {
                 bat """
                     if exist analysis_output rmdir /S /Q analysis_output
                     mkdir analysis_output
-                    "${PYTHON_PATH}" scripts\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
-                    "${PYTHON_PATH}" scripts\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
+                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
                 """
             }
         }
@@ -111,6 +111,8 @@ pipeline {
             echo 'Pipeline completed!'
         }
     }
+}
+
 }
 
 
