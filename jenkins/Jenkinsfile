@@ -18,7 +18,10 @@ pipeline {
         stage('Check for Config Changes') {
             steps {
                 script {
+                    // Check for any changes in inputs.conf or other config files
                     def configChanges = bat(script: 'git status --porcelain configs/', returnStdout: true).trim()
+                    echo "Git Status Output: ${configChanges}"
+
                     if (configChanges) {
                         echo 'Detected changes in config files. Preparing to commit.'
                         env.CONFIG_CHANGED = 'true'
@@ -39,7 +42,14 @@ pipeline {
                     bat """
                         git config --global user.name "jenkins-bot"
                         git config --global user.email "jenkins@example.com"
+
+                        // Force add the files to ensure changes are captured
                         git add configs/inputs.conf configs/outputs.conf
+                        
+                        // Check git status again to see if changes are staged
+                        git status
+                        
+                        // Commit and push the changes
                         git commit -m "Update configs from local changes"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
@@ -66,7 +76,6 @@ pipeline {
                     echo -----------------------
                     echo Inputs.conf Suggestions:
                     type analysis_output\\inputs_suggestions.txt
-
                     echo -----------------------
                     echo Outputs.conf Suggestions:
                     type analysis_output\\outputs_suggestions.txt
@@ -78,6 +87,7 @@ pipeline {
         stage('Check for Suggestion Changes') {
             steps {
                 script {
+                    // Check if there are any changes in the suggestions
                     def suggestionChanges = bat(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
                     if (suggestionChanges) {
                         echo 'Detected changes in suggestions. Preparing to commit.'
@@ -112,6 +122,7 @@ pipeline {
         }
     }
 }
+
 
 
 
