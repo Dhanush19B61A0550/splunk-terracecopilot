@@ -18,17 +18,12 @@ pipeline {
         stage('Check for Config Changes') {
             steps {
                 script {
-                    echo 'Checking for changes in inputs.conf...'
-
-                    // Check the status of inputs.conf to detect changes
-                    def configChanges = bat(script: 'git status --porcelain configs/inputs.conf', returnStdout: true).trim()
-                    echo "Git Status Output: ${configChanges}"
-
+                    def configChanges = bat(script: 'git status --porcelain configs/', returnStdout: true).trim()
                     if (configChanges) {
-                        echo 'Detected changes in inputs.conf. Preparing to commit.'
+                        echo 'Detected changes in config files. Preparing to commit.'
                         env.CONFIG_CHANGED = 'true'
                     } else {
-                        echo 'No changes detected in inputs.conf.'
+                        echo 'No changes detected in config files.'
                         env.CONFIG_CHANGED = 'false'
                     }
                 }
@@ -44,12 +39,8 @@ pipeline {
                     bat """
                         git config --global user.name "jenkins-bot"
                         git config --global user.email "jenkins@example.com"
-
-                        // Add changes to inputs.conf
-                        git add configs/inputs.conf
-
-                        // Commit and push the changes
-                        git commit -m "Update inputs.conf with new changes"
+                        git add configs/inputs.conf configs/outputs.conf
+                        git commit -m "Update configs from local changes"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
                 }
@@ -58,11 +49,12 @@ pipeline {
 
         stage('Run Config Analysis') {
             steps {
-                echo 'Running configuration analysis on inputs.conf...'
+                echo 'Running configuration analysis on config files...'
                 bat """
                     if exist analysis_output rmdir /S /Q analysis_output
                     mkdir analysis_output
                     "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
                 """
             }
         }
@@ -74,6 +66,10 @@ pipeline {
                     echo -----------------------
                     echo Inputs.conf Suggestions:
                     type analysis_output\\inputs_suggestions.txt
+
+                    echo -----------------------
+                    echo Outputs.conf Suggestions:
+                    type analysis_output\\outputs_suggestions.txt
                     echo -----------------------
                 '''
             }
@@ -82,7 +78,6 @@ pipeline {
         stage('Check for Suggestion Changes') {
             steps {
                 script {
-                    // Check if there are changes in the suggestions
                     def suggestionChanges = bat(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
                     if (suggestionChanges) {
                         echo 'Detected changes in suggestions. Preparing to commit.'
@@ -103,7 +98,6 @@ pipeline {
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
                     bat """
                         git add analysis_output
-                        git status // Check if suggestions are staged
                         git commit -m "Update configuration analysis suggestions"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
@@ -118,7 +112,6 @@ pipeline {
         }
     }
 }
-
 
 
 
