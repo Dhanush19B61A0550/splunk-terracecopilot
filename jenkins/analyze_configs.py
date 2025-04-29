@@ -77,3 +77,4 @@ if __name__ == '__main__':
     suggestions = suggest_updates(sys.argv[1])
     for suggestion in suggestions:
         print(suggestion)
+
