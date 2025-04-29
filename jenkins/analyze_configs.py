@@ -11,40 +11,51 @@ def suggest_updates(file_path):
     print(f"Analyzing {file_path}... (Simulating API Call)")
     time.sleep(1)
 
+    filename = os.path.basename(file_path).lower()
     with open(file_path, 'r') as f:
-        lines = f.readlines()
+        lines = [line.strip() for line in f if line.strip()]
 
     suggestions = []
-    stanza_start_line = None
-    stanza_lines = []
-    line_num = 0
 
-    for i, line in enumerate(lines):
-        line_num = i + 1
-        line = line.strip()
+    if 'outputs.conf' in filename:
+        # Special handling for outputs.conf
+        expected = [
+            '[tcpout]',
+            'defaultGroup = default-autolb-group',
+            '[tcpout:default-autolb-group]',
+            'server = 127.0.0.1:9997'
+        ]
+        if lines != expected:
+            suggestions.append("Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.")
+        else:
+            suggestions.append("No suggestions found.")
 
-        # New stanza starts
-        if line.startswith('[') and line.endswith(']'):
-            if stanza_lines:
-                # Analyze previous stanza
-                suggestions += analyze_stanza(stanza_start_line, stanza_lines)
-            stanza_start_line = line_num
-            stanza_lines = [line]
-        elif stanza_lines:
-            stanza_lines.append(line)
+    elif 'inputs.conf' in filename:
+        # Regular inputs.conf analysis
+        stanza_start_line = None
+        stanza_lines = []
+        for i, line in enumerate(lines):
+            line_num = i + 1
+            if line.startswith('[') and line.endswith(']'):
+                if stanza_lines:
+                    suggestions += analyze_stanza(stanza_start_line, stanza_lines)
+                stanza_start_line = line_num
+                stanza_lines = [line]
+            elif stanza_lines:
+                stanza_lines.append(line)
 
-    # Analyze last stanza
-    if stanza_lines:
-        suggestions += analyze_stanza(stanza_start_line, stanza_lines)
+        if stanza_lines:
+            suggestions += analyze_stanza(stanza_start_line, stanza_lines)
 
-    if not suggestions:
-        suggestions.append("No suggestions found.")
-    
+        if not suggestions:
+            suggestions.append("No suggestions found.")
+
+    else:
+        suggestions.append("Unknown config file. No analysis performed.")
+
     return suggestions
 
-
 def analyze_stanza(start_line, stanza_lines):
-    stanza_text = "\n".join(stanza_lines)
     missing = []
 
     if not any(re.match(r'^\s*index\s*=', line, re.IGNORECASE) for line in stanza_lines):
@@ -57,7 +68,6 @@ def analyze_stanza(start_line, stanza_lines):
     if missing:
         return [f"Stanza starting at line {start_line}: Missing {', '.join(missing)}"]
     return []
-
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
