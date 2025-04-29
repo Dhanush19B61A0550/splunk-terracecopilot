@@ -1,2 +1,2 @@
 Analyzing configs\inputs.conf... (Simulating API Call)
-Stanza starting at line 42: Missing `disabled = true|false`
+Stanza starting at line 29: Missing `disabled = true|false`
