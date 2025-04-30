@@ -2,16 +2,10 @@ import os
 import sys
 import time
 import re
-from colorama import init
+from colorama import init, Fore, Style
 
-# Initialize colorama
-init(autoreset=True)
-
-# ANSI color codes
-RED = "\033[91m"
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-RESET = "\033[0m"
+# Initialize colorama for Windows Jenkins console
+init(autoreset=True, convert=True, strip=False)
 
 # Helper function to print suggestions
 def print_suggestions(suggestions):
@@ -20,10 +14,10 @@ def print_suggestions(suggestions):
 
 def suggest_updates(file_path):
     if not os.path.exists(file_path):
-        print(f"{RED}Error: The file {file_path} does not exist.{RESET}")
+        print(Fore.RED + f"Error: The file {file_path} does not exist.")
         sys.exit(1)
 
-    print(f"{YELLOW}Analyzing {file_path}... (Simulating API Call){RESET}")
+    print(Fore.YELLOW + f"Analyzing {file_path}... (Simulating API Call)")
     time.sleep(1)
 
     filename = os.path.basename(file_path).lower()
@@ -37,14 +31,13 @@ def suggest_updates(file_path):
     elif 'inputs.conf' in filename:
         suggestions += analyze_inputs_conf(raw_lines)
     else:
-        suggestions.append(f"{YELLOW}Unknown config file. No analysis performed.{RESET}")
+        suggestions.append(Fore.YELLOW + "Unknown config file. No analysis performed.")
 
     if not suggestions:
-        suggestions.append(f"{GREEN}No suggestions found.{RESET}")
+        suggestions.append(Fore.GREEN + "No suggestions found.")
 
     return suggestions
 
-# Analyze inputs.conf file
 def analyze_inputs_conf(raw_lines):
     suggestions = []
     stanza_start_line = None
@@ -68,7 +61,6 @@ def analyze_inputs_conf(raw_lines):
 
     return suggestions
 
-# Analyze outputs.conf file
 def analyze_outputs_conf(raw_lines):
     suggestions = []
     expected = [
@@ -80,13 +72,12 @@ def analyze_outputs_conf(raw_lines):
     current_lines = [line.strip() for line in raw_lines if line.strip()]
 
     if current_lines != expected:
-        suggestions.append(f"{RED}Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.{RESET}")
+        suggestions.append(Fore.RED + "Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.")
     else:
-        suggestions.append(f"{GREEN}Outputs.conf configuration is correct.{RESET}")
+        suggestions.append(Fore.GREEN + "Outputs.conf configuration is correct.")
 
     return suggestions
 
-# Analyze a stanza inside the configuration files
 def analyze_stanza(start_line, stanza_lines):
     missing = []
 
@@ -98,13 +89,12 @@ def analyze_stanza(start_line, stanza_lines):
         missing.append("disabled = true|false")
 
     if missing:
-        return [f"{RED}Stanza starting at line {start_line}: Missing {', '.join(missing)}{RESET}"]
+        return [Fore.RED + f"Stanza starting at line {start_line}: Missing {', '.join(missing)}"]
     return []
 
-# Main function to drive the script
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print(f"{RED}Usage: python analyze_configs.py <path_to_conf_file>{RESET}")
+        print(Fore.RED + "Usage: python analyze_configs.py <path_to_conf_file>")
         sys.exit(1)
 
     file_path = sys.argv[1]
