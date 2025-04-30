@@ -4,7 +4,7 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/Dhanush19B61A0550/splunk-terracecopilot.git'
         GIT_USER = 'Dhanush19B61A0550'
-        PYTHON_PATH = 'C:\\Python39\\python.exe' // Update this with your Python path on Windows
+        PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'  // Updated to the correct Python path on Windows
     }
 
     options {
