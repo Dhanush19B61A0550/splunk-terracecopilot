@@ -82,7 +82,7 @@ def analyze_outputs_conf(raw_lines):
     if current_lines != expected:
         suggestions.append(f"{RED}Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.{RESET}")
     else:
-        suggestions.append(f"{GREEN}No suggestions found.{RESET}")
+        suggestions.append(f"{GREEN}Outputs.conf configuration is correct.{RESET}")
 
     return suggestions
 
@@ -90,11 +90,11 @@ def analyze_outputs_conf(raw_lines):
 def analyze_stanza(start_line, stanza_lines):
     missing = []
 
-    if not any(re.match(r'^\s*index\s*=', line, re.IGNORECASE) for line in stanza_lines):
+    if not any(re.match(r'^\s*index\s*=\s*', line, re.IGNORECASE) for line in stanza_lines):
         missing.append("index = your_index_name")
-    if not any(re.match(r'^\s*sourcetype\s*=', line, re.IGNORECASE) for line in stanza_lines):
+    if not any(re.match(r'^\s*sourcetype\s*=\s*', line, re.IGNORECASE) for line in stanza_lines):
         missing.append("sourcetype = your_sourcetype")
-    if not any(re.match(r'^\s*disabled\s*=', line, re.IGNORECASE) for line in stanza_lines):
+    if not any(re.match(r'^\s*disabled\s*=\s*', line, re.IGNORECASE) for line in stanza_lines):
         missing.append("disabled = true|false")
 
     if missing:
