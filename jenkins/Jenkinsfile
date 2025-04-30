@@ -4,7 +4,7 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/Dhanush19B61A0550/splunk-terracecopilot.git'
         GIT_USER = 'Dhanush19B61A0550'
-        PYTHON_PATH = '/usr/bin/python3' // Update this with your Python path on Linux-based systems
+        PYTHON_PATH = 'C:\\Python39\\python.exe' // Update this with your Python path on Windows
     }
 
     options {
@@ -22,7 +22,7 @@ pipeline {
         stage('Check for Config Changes') {
             steps {
                 script {
-                    def configChanges = sh(script: 'git status --porcelain configs/', returnStdout: true).trim()
+                    def configChanges = bat(script: 'git status --porcelain configs/', returnStdout: true).trim()
                     echo "Git Status Output: ${configChanges}"
 
                     if (configChanges) {
@@ -42,7 +42,7 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
-                    sh """
+                    bat """
                         git config --global user.name "jenkins-bot"
                         git config --global user.email "jenkins@example.com"
                         git add configs/inputs.conf configs/outputs.conf
@@ -56,13 +56,11 @@ pipeline {
         stage('Run Config Analysis') {
             steps {
                 ansiColor('xterm') {
-                    sh """
-                        if [ -d analysis_output ]; then
-                            rm -rf analysis_output
-                        fi
+                    bat """
+                        if exist analysis_output rd /s /q analysis_output
                         mkdir analysis_output
-                        "${PYTHON_PATH}" jenkins/analyze_configs.py configs/inputs.conf > analysis_output/inputs_suggestions.txt
-                        "${PYTHON_PATH}" jenkins/analyze_configs.py configs/outputs.conf > analysis_output/outputs_suggestions.txt
+                        "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                        "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
                     """
                 }
             }
@@ -71,13 +69,13 @@ pipeline {
         stage('Display Suggestions') {
             steps {
                 ansiColor('xterm') {
-                    sh """
+                    bat """
                         echo -----------------------
                         echo Inputs.conf Suggestions:
-                        cat analysis_output/inputs_suggestions.txt
+                        type analysis_output\\inputs_suggestions.txt
                         echo -----------------------
                         echo Outputs.conf Suggestions:
-                        cat analysis_output/outputs_suggestions.txt
+                        type analysis_output\\outputs_suggestions.txt
                         echo -----------------------
                     """
                 }
@@ -87,7 +85,7 @@ pipeline {
         stage('Check for Suggestion Changes') {
             steps {
                 script {
-                    def suggestionChanges = sh(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
+                    def suggestionChanges = bat(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
                     if (suggestionChanges) {
                         echo 'Detected changes in suggestions. Preparing to commit.'
                         env.SUGGESTIONS_CHANGED = 'true'
@@ -105,7 +103,7 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
-                    sh """
+                    bat """
                         git add analysis_output
                         git commit -m "Update configuration analysis suggestions"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
