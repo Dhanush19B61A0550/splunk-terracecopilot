@@ -2,10 +2,11 @@ import os
 import sys
 import time
 import re
-from colorama import init, Fore, Style
 
-# Initialize colorama for Windows Jenkins console
-init(autoreset=True, convert=True, strip=False)
+# Emoji/symbol replacements
+ERROR = "❌"
+SUCCESS = "✅"
+WARNING = "⚠️"
 
 # Helper function to print suggestions
 def print_suggestions(suggestions):
@@ -14,10 +15,10 @@ def print_suggestions(suggestions):
 
 def suggest_updates(file_path):
     if not os.path.exists(file_path):
-        print(Fore.RED + f"Error: The file {file_path} does not exist.")
+        print(f"{ERROR} Error: The file {file_path} does not exist.")
         sys.exit(1)
 
-    print(Fore.YELLOW + f"Analyzing {file_path}... (Simulating API Call)")
+    print(f"{WARNING} Analyzing {file_path}... (Simulating API Call)")
     time.sleep(1)
 
     filename = os.path.basename(file_path).lower()
@@ -31,10 +32,10 @@ def suggest_updates(file_path):
     elif 'inputs.conf' in filename:
         suggestions += analyze_inputs_conf(raw_lines)
     else:
-        suggestions.append(Fore.YELLOW + "Unknown config file. No analysis performed.")
+        suggestions.append(f"{WARNING} Unknown config file. No analysis performed.")
 
     if not suggestions:
-        suggestions.append(Fore.GREEN + "No suggestions found.")
+        suggestions.append(f"{SUCCESS} No suggestions found.")
 
     return suggestions
 
@@ -72,9 +73,9 @@ def analyze_outputs_conf(raw_lines):
     current_lines = [line.strip() for line in raw_lines if line.strip()]
 
     if current_lines != expected:
-        suggestions.append(Fore.RED + "Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.")
+        suggestions.append(f"{ERROR} Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.")
     else:
-        suggestions.append(Fore.GREEN + "Outputs.conf configuration is correct.")
+        suggestions.append(f"{SUCCESS} Outputs.conf configuration is correct.")
 
     return suggestions
 
@@ -89,12 +90,12 @@ def analyze_stanza(start_line, stanza_lines):
         missing.append("disabled = true|false")
 
     if missing:
-        return [Fore.RED + f"Stanza starting at line {start_line}: Missing {', '.join(missing)}"]
+        return [f"{ERROR} Stanza starting at line {start_line}: Missing {', '.join(missing)}"]
     return []
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print(Fore.RED + "Usage: python analyze_configs.py <path_to_conf_file>")
+        print(f"{ERROR} Usage: python analyze_configs.py <path_to_conf_file>")
         sys.exit(1)
 
     file_path = sys.argv[1]
