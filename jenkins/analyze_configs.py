@@ -9,14 +9,18 @@ SUCCESS = "✅"
 WARNING = "⚠️"
 INFO = "ℹ️"
 
-# Print suggestions
 def print_suggestions(suggestions):
+    """
+    Print formatted list of suggestions.
+    """
     print("\n--- Suggestions ---")
     for suggestion in suggestions:
         print(suggestion)
 
-# Entry function
 def suggest_updates(file_path):
+    """
+    Analyze the given .conf file and provide suggestions.
+    """
     if not os.path.exists(file_path):
         print(f"{ERROR} Error: The file '{file_path}' does not exist.")
         sys.exit(1)
@@ -31,19 +35,21 @@ def suggest_updates(file_path):
     suggestions = []
 
     if 'outputs.conf' in filename:
-        suggestions += analyze_outputs_conf(raw_lines)
+        suggestions.extend(analyze_outputs_conf(raw_lines))
     elif 'inputs.conf' in filename:
-        suggestions += analyze_inputs_conf(raw_lines)
+        suggestions.extend(analyze_inputs_conf(raw_lines))
     else:
         suggestions.append(f"{WARNING} Unknown config file '{filename}'. No analysis performed.")
 
     if not suggestions:
-        suggestions.append(f"{SUCCESS} No issues found in {filename}.")
+        suggestions.append(f"{SUCCESS} No issues found in '{filename}'.")
 
     return suggestions
 
-# Analyze inputs.conf logic
 def analyze_inputs_conf(raw_lines):
+    """
+    Analyze an inputs.conf file stanza by stanza.
+    """
     suggestions = []
     stanza_start_line = None
     stanza_lines = []
@@ -55,20 +61,21 @@ def analyze_inputs_conf(raw_lines):
 
         if line.startswith('[') and line.endswith(']'):
             if stanza_lines:
-                suggestions += analyze_stanza(stanza_start_line, stanza_lines)
+                suggestions.extend(analyze_stanza(stanza_start_line, stanza_lines))
             stanza_start_line = i + 1
             stanza_lines = [line]
         else:
             stanza_lines.append(line)
 
-    # Analyze last stanza
     if stanza_lines:
-        suggestions += analyze_stanza(stanza_start_line, stanza_lines)
+        suggestions.extend(analyze_stanza(stanza_start_line, stanza_lines))
 
     return suggestions
 
-# Analyze outputs.conf logic
 def analyze_outputs_conf(raw_lines):
+    """
+    Check if outputs.conf contains the required structure.
+    """
     suggestions = []
     required_structure = [
         '[tcpout]',
@@ -78,39 +85,42 @@ def analyze_outputs_conf(raw_lines):
     ]
 
     current_lines = [line.strip() for line in raw_lines if line.strip()]
-    mismatches = []
-
-    for expected_line in required_structure:
-        if expected_line not in current_lines:
-            mismatches.append(expected_line)
+    mismatches = [expected for expected in required_structure if expected not in current_lines]
 
     if mismatches:
-        suggestions.append(f"{ERROR} outputs.conf is missing the following required settings:\n    - " + "\n    - ".join(mismatches))
+        suggestions.append(
+            f"{ERROR} 'outputs.conf' is missing the following required settings:\n    - " +
+            "\n    - ".join(mismatches)
+        )
     else:
-        suggestions.append(f"{SUCCESS} outputs.conf configuration is valid.")
+        suggestions.append(f"{SUCCESS} 'outputs.conf' configuration is valid.")
 
     return suggestions
 
-# Analyze individual stanza
 def analyze_stanza(start_line, stanza_lines):
-    missing = []
+    """
+    Check if the stanza contains all required fields.
+    """
     required_fields = ['index', 'sourcetype', 'disabled']
+    missing_fields = []
 
     for field in required_fields:
         if not any(re.match(rf'^\s*{field}\s*=\s*', line, re.IGNORECASE) for line in stanza_lines):
-            missing.append(f"{field} = <value>")
+            missing_fields.append(f"{field} = <value>")
 
-    if missing:
-        return [f"{ERROR} Stanza starting at line {start_line} is missing required fields:\n    - " + "\n    - ".join(missing)]
+    if missing_fields:
+        return [
+            f"{ERROR} Stanza starting at line {start_line} is missing required fields:\n    - " +
+            "\n    - ".join(missing_fields)
+        ]
     
     return []
 
-# Script entry point
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print(f"{ERROR} Usage: python analyze_configs.py <path_to_conf_file>")
         sys.exit(1)
 
-    file_path = sys.argv[1]
-    suggestions = suggest_updates(file_path)
-    print_suggestions(suggestions)
+    config_file_path = sys.argv[1]
+    results = suggest_updates(config_file_path)
+    print_suggestions(results)

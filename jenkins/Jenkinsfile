@@ -56,15 +56,29 @@ pipeline {
         }
 
         stage('Run Config Analysis') {
-            steps {
-                echo 'Running configuration analysis...'
-                ansiColor('xterm') {
-                    bat """
-                        if exist analysis_output rd /s /q analysis_output
-                        mkdir analysis_output
-                        "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
-                        "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
-                    """
+            parallel {
+                stage('Analyze inputs.conf') {
+                    steps {
+                        echo 'Running analysis on inputs.conf...'
+                        ansiColor('xterm') {
+                            bat """
+                                if not exist analysis_output mkdir analysis_output
+                                "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                            """
+                        }
+                    }
+                }
+
+                stage('Analyze outputs.conf') {
+                    steps {
+                        echo 'Running analysis on outputs.conf...'
+                        ansiColor('xterm') {
+                            bat """
+                                if not exist analysis_output mkdir analysis_output
+                                "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
+                            """
+                        }
+                    }
                 }
             }
         }
@@ -130,6 +144,11 @@ pipeline {
 
         failure {
             echo 'Pipeline failed, please check the logs for details.'
+        }
+
+        cleanup {
+            echo 'Cleaning up temporary files...'
+            bat 'rd /s /q analysis_output'
         }
     }
 }
