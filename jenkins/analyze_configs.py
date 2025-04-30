@@ -2,19 +2,17 @@ import os
 import sys
 import time
 import re
+from colorama import init, Fore, Style
 
-# ANSI color codes
-RED = "\033[91m"
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-RESET = "\033[0m"
+# Initialize colorama
+init(autoreset=True)
 
 def suggest_updates(file_path):
     if not os.path.exists(file_path):
-        print(f"{RED}Error: The file {file_path} does not exist.{RESET}")
+        print(f"{Fore.RED}Error: The file {file_path} does not exist.")
         sys.exit(1)
 
-    print(f"{YELLOW}Analyzing {file_path}... (Simulating API Call){RESET}")
+    print(f"{Fore.YELLOW}Analyzing {file_path}... (Simulating API Call)")
     time.sleep(1)
 
     filename = os.path.basename(file_path).lower()
@@ -32,9 +30,9 @@ def suggest_updates(file_path):
         ]
         current_lines = [line.strip() for line in raw_lines if line.strip()]
         if current_lines != expected:
-            suggestions.append(f"{RED}Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.{RESET}")
+            suggestions.append(f"{Fore.RED}Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.")
         else:
-            suggestions.append(f"{GREEN}No suggestions found.{RESET}")
+            suggestions.append(f"{Fore.GREEN}No suggestions found.")
 
     elif 'inputs.conf' in filename:
         stanza_start_line = None
@@ -57,10 +55,10 @@ def suggest_updates(file_path):
             suggestions += analyze_stanza(stanza_start_line, stanza_lines)
 
         if not suggestions:
-            suggestions.append(f"{GREEN}No suggestions found.{RESET}")
+            suggestions.append(f"{Fore.GREEN}No suggestions found.")
 
     else:
-        suggestions.append(f"{YELLOW}Unknown config file. No analysis performed.{RESET}")
+        suggestions.append(f"{Fore.YELLOW}Unknown config file. No analysis performed.")
 
     return suggestions
 
@@ -75,12 +73,12 @@ def analyze_stanza(start_line, stanza_lines):
         missing.append("disabled = true|false")
 
     if missing:
-        return [f"{RED}Stanza starting at line {start_line}: Missing {', '.join(missing)}{RESET}"]
+        return [f"{Fore.RED}Stanza starting at line {start_line}: Missing {', '.join(missing)}"]
     return []
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print(f"{RED}Usage: python analyze_configs.py <path_to_conf_file>{RESET}")
+        print(f"{Fore.RED}Usage: python analyze_configs.py <path_to_conf_file>")
         sys.exit(1)
 
     suggestions = suggest_updates(sys.argv[1])

@@ -7,6 +7,10 @@ pipeline {
         PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'
     }
 
+    options {
+        ansiColor('xterm')
+    }
+
     stages {
         stage('Clone GitHub Repo') {
             steps {
@@ -18,7 +22,6 @@ pipeline {
         stage('Check for Config Changes') {
             steps {
                 script {
-                    // Check for any changes in inputs.conf or other config files
                     def configChanges = bat(script: 'git status --porcelain configs/', returnStdout: true).trim()
                     echo "Git Status Output: ${configChanges}"
 
@@ -40,16 +43,10 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
                     bat """
-                        git config --global user.name "jenkins-bot"
-                        git config --global user.email "jenkins@example.com"
-
-                        // Force add the files to ensure changes are captured
+                        git config user.name "jenkins-bot"
+                        git config user.email "jenkins@example.com"
                         git add configs/inputs.conf configs/outputs.conf
-                        
-                        // Check git status again to see if changes are staged
                         git status
-                        
-                        // Commit and push the changes
                         git commit -m "Update configs from local changes"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
@@ -59,35 +56,36 @@ pipeline {
 
         stage('Run Config Analysis') {
             steps {
-                echo 'Running configuration analysis on config files...'
-                bat """
-                    if exist analysis_output rmdir /S /Q analysis_output
-                    mkdir analysis_output
-                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
-                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
-                """
+                ansiColor('xterm') {
+                    bat """
+                        if exist analysis_output rmdir /S /Q analysis_output
+                        mkdir analysis_output
+                        "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                        "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
+                    """
+                }
             }
         }
 
         stage('Display Suggestions') {
             steps {
-                echo 'Displaying AI suggestions:'
-                bat '''
-                    echo -----------------------
-                    echo Inputs.conf Suggestions:
-                    type analysis_output\\inputs_suggestions.txt
-                    echo -----------------------
-                    echo Outputs.conf Suggestions:
-                    type analysis_output\\outputs_suggestions.txt
-                    echo -----------------------
-                '''
+                ansiColor('xterm') {
+                    bat '''
+                        echo -----------------------
+                        echo Inputs.conf Suggestions:
+                        type analysis_output\\inputs_suggestions.txt
+                        echo -----------------------
+                        echo Outputs.conf Suggestions:
+                        type analysis_output\\outputs_suggestions.txt
+                        echo -----------------------
+                    '''
+                }
             }
         }
 
         stage('Check for Suggestion Changes') {
             steps {
                 script {
-                    // Check if there are any changes in the suggestions
                     def suggestionChanges = bat(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
                     if (suggestionChanges) {
                         echo 'Detected changes in suggestions. Preparing to commit.'
@@ -122,7 +120,3 @@ pipeline {
         }
     }
 }
-
-
-
-
