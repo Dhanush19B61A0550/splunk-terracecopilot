@@ -4,11 +4,11 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/Dhanush19B61A0550/splunk-terracecopilot.git'
         GIT_USER = 'Dhanush19B61A0550'
-        PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'
+        PYTHON_PATH = '/usr/bin/python3' // Update this with your Python path on Linux-based systems
     }
 
     options {
-        ansiColor('xterm')
+        ansiColor('xterm')  // Enable color output in Jenkins console
     }
 
     stages {
@@ -22,7 +22,7 @@ pipeline {
         stage('Check for Config Changes') {
             steps {
                 script {
-                    def configChanges = bat(script: 'git status --porcelain configs/', returnStdout: true).trim()
+                    def configChanges = sh(script: 'git status --porcelain configs/', returnStdout: true).trim()
                     echo "Git Status Output: ${configChanges}"
 
                     if (configChanges) {
@@ -42,11 +42,10 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
-                    bat """
-                        git config user.name "jenkins-bot"
-                        git config user.email "jenkins@example.com"
+                    sh """
+                        git config --global user.name "jenkins-bot"
+                        git config --global user.email "jenkins@example.com"
                         git add configs/inputs.conf configs/outputs.conf
-                        git status
                         git commit -m "Update configs from local changes"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
@@ -57,11 +56,13 @@ pipeline {
         stage('Run Config Analysis') {
             steps {
                 ansiColor('xterm') {
-                    bat """
-                        if exist analysis_output rmdir /S /Q analysis_output
+                    sh """
+                        if [ -d analysis_output ]; then
+                            rm -rf analysis_output
+                        fi
                         mkdir analysis_output
-                        "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
-                        "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
+                        "${PYTHON_PATH}" jenkins/analyze_configs.py configs/inputs.conf > analysis_output/inputs_suggestions.txt
+                        "${PYTHON_PATH}" jenkins/analyze_configs.py configs/outputs.conf > analysis_output/outputs_suggestions.txt
                     """
                 }
             }
@@ -70,15 +71,15 @@ pipeline {
         stage('Display Suggestions') {
             steps {
                 ansiColor('xterm') {
-                    bat '''
+                    sh """
                         echo -----------------------
                         echo Inputs.conf Suggestions:
-                        type analysis_output\\inputs_suggestions.txt
+                        cat analysis_output/inputs_suggestions.txt
                         echo -----------------------
                         echo Outputs.conf Suggestions:
-                        type analysis_output\\outputs_suggestions.txt
+                        cat analysis_output/outputs_suggestions.txt
                         echo -----------------------
-                    '''
+                    """
                 }
             }
         }
@@ -86,7 +87,7 @@ pipeline {
         stage('Check for Suggestion Changes') {
             steps {
                 script {
-                    def suggestionChanges = bat(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
+                    def suggestionChanges = sh(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
                     if (suggestionChanges) {
                         echo 'Detected changes in suggestions. Preparing to commit.'
                         env.SUGGESTIONS_CHANGED = 'true'
@@ -104,7 +105,7 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
-                    bat """
+                    sh """
                         git add analysis_output
                         git commit -m "Update configuration analysis suggestions"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
