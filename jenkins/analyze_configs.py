@@ -13,43 +13,42 @@ def suggest_updates(file_path):
 
     filename = os.path.basename(file_path).lower()
     with open(file_path, 'r') as f:
-        lines = [line.strip() for line in f if line.strip()]
+        raw_lines = f.readlines()  # Preserve line numbers and spacing
 
     suggestions = []
 
     if 'outputs.conf' in filename:
-        # Special handling for outputs.conf
         expected = [
             '[tcpout]',
             'defaultGroup = default-autolb-group',
             '[tcpout:default-autolb-group]',
             'server = 127.0.0.1:9997'
         ]
-        if lines != expected:
+        current_lines = [line.strip() for line in raw_lines if line.strip()]
+        if current_lines != expected:
             suggestions.append("Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.")
         else:
             suggestions.append("No suggestions found.")
 
     elif 'inputs.conf' in filename:
-        # Regular inputs.conf analysis
-        stanza_start_line = None
+        stanza_start = None
         stanza_lines = []
-        for i, line in enumerate(lines):
-            line_num = i + 1
-            if line.startswith('[') and line.endswith(']'):
+
+        for i, line in enumerate(raw_lines):
+            stripped = line.strip()
+            if stripped.startswith('[') and stripped.endswith(']'):
                 if stanza_lines:
-                    suggestions += analyze_stanza(stanza_start_line, stanza_lines)
-                stanza_start_line = line_num
-                stanza_lines = [line]
-            elif stanza_lines:
-                stanza_lines.append(line)
+                    suggestions += analyze_stanza(stanza_start + 1, stanza_lines)
+                stanza_start = i
+                stanza_lines = [stripped]
+            elif stanza_lines is not None:
+                stanza_lines.append(stripped)
 
         if stanza_lines:
-            suggestions += analyze_stanza(stanza_start_line, stanza_lines)
+            suggestions += analyze_stanza(stanza_start + 1, stanza_lines)
 
         if not suggestions:
             suggestions.append("No suggestions found.")
-
     else:
         suggestions.append("Unknown config file. No analysis performed.")
 
@@ -77,4 +76,3 @@ if __name__ == '__main__':
     suggestions = suggest_updates(sys.argv[1])
     for suggestion in suggestions:
         print(suggestion)
-
