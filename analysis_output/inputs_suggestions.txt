@@ -1,4 +1,5 @@
 Analyzing configs\inputs.conf... (Simulating API Call)
+Stanza starting at line 7: Missing disabled = true|false
 Stanza starting at line 25: Missing sourcetype = your_sourcetype
 Stanza starting at line 42: Missing sourcetype = your_sourcetype
 Stanza starting at line 52: Missing sourcetype = your_sourcetype
