@@ -13,7 +13,7 @@ def suggest_updates(file_path):
 
     filename = os.path.basename(file_path).lower()
     with open(file_path, 'r') as f:
-        raw_lines = f.readlines()  # Preserve line numbers and spacing
+        raw_lines = f.readlines()  # Don't strip yet to keep line numbers accurate
 
     suggestions = []
 
@@ -31,24 +31,29 @@ def suggest_updates(file_path):
             suggestions.append("No suggestions found.")
 
     elif 'inputs.conf' in filename:
-        stanza_start = None
+        stanza_start_line = None
         stanza_lines = []
 
-        for i, line in enumerate(raw_lines):
-            stripped = line.strip()
-            if stripped.startswith('[') and stripped.endswith(']'):
-                if stanza_lines:
-                    suggestions += analyze_stanza(stanza_start + 1, stanza_lines)
-                stanza_start = i
-                stanza_lines = [stripped]
-            elif stanza_lines is not None:
-                stanza_lines.append(stripped)
+        for i, raw_line in enumerate(raw_lines):
+            line = raw_line.strip()
+            if not line:
+                continue  # Skip empty lines
 
+            if line.startswith('[') and line.endswith(']'):
+                if stanza_lines:
+                    suggestions += analyze_stanza(stanza_start_line, stanza_lines)
+                stanza_start_line = i + 1  # Human-readable line number
+                stanza_lines = [line]
+            else:
+                stanza_lines.append(line)
+
+        # Don't forget the last stanza
         if stanza_lines:
-            suggestions += analyze_stanza(stanza_start + 1, stanza_lines)
+            suggestions += analyze_stanza(stanza_start_line, stanza_lines)
 
         if not suggestions:
             suggestions.append("No suggestions found.")
+
     else:
         suggestions.append("Unknown config file. No analysis performed.")
 
