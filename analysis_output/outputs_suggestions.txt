@@ -1,2 +1,2 @@
-[93mAnalyzing configs\outputs.conf... (Simulating API Call)[0m
-[92mNo suggestions found.[0m
+Analyzing configs\outputs.conf... (Simulating API Call)
+No suggestions found.

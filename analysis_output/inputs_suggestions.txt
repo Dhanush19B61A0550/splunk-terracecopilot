@@ -1,4 +1,4 @@
-[93mAnalyzing configs\inputs.conf... (Simulating API Call)[0m
-[91mStanza starting at line 25: Missing sourcetype = your_sourcetype[0m
-[91mStanza starting at line 42: Missing sourcetype = your_sourcetype[0m
-[91mStanza starting at line 52: Missing sourcetype = your_sourcetype[0m
+Analyzing configs\inputs.conf... (Simulating API Call)
+Stanza starting at line 25: Missing sourcetype = your_sourcetype
+Stanza starting at line 42: Missing sourcetype = your_sourcetype
+Stanza starting at line 52: Missing sourcetype = your_sourcetype
