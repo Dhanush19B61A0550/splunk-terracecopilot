@@ -22,6 +22,7 @@ pipeline {
         stage('Check for Config Changes') {
             steps {
                 script {
+                    echo 'Checking for changes in configuration files...'
                     def configChanges = bat(script: 'git status --porcelain configs/', returnStdout: true).trim()
                     echo "Git Status Output: ${configChanges}"
 
@@ -41,6 +42,7 @@ pipeline {
                 expression { env.CONFIG_CHANGED == 'true' }
             }
             steps {
+                echo 'Committing and pushing config changes...'
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
                     bat """
                         git config --global user.name "jenkins-bot"
@@ -55,6 +57,7 @@ pipeline {
 
         stage('Run Config Analysis') {
             steps {
+                echo 'Running configuration analysis...'
                 ansiColor('xterm') {
                     bat """
                         if exist analysis_output rd /s /q analysis_output
@@ -68,6 +71,7 @@ pipeline {
 
         stage('Display Suggestions') {
             steps {
+                echo 'Displaying analysis suggestions...'
                 ansiColor('xterm') {
                     bat """
                         echo -----------------------
@@ -85,6 +89,7 @@ pipeline {
         stage('Check for Suggestion Changes') {
             steps {
                 script {
+                    echo 'Checking for changes in suggestion files...'
                     def suggestionChanges = bat(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
                     if (suggestionChanges) {
                         echo 'Detected changes in suggestions. Preparing to commit.'
@@ -102,6 +107,7 @@ pipeline {
                 expression { env.SUGGESTIONS_CHANGED == 'true' }
             }
             steps {
+                echo 'Committing and pushing suggestion changes...'
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
                     bat """
                         git add analysis_output
@@ -116,6 +122,14 @@ pipeline {
     post {
         always {
             echo 'Pipeline completed!'
+        }
+
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+
+        failure {
+            echo 'Pipeline failed, please check the logs for details.'
         }
     }
 }
