@@ -32,7 +32,7 @@ def suggest_updates(file_path):
         if current_lines != expected:
             suggestions.append("❌ Configuration mismatch detected in outputs.conf. Please ensure the standard tcpout settings.")
         else:
-            suggestions.append("✔ No issues found in outputs.conf.")
+            suggestions.append("✅ No issues found in outputs.conf.")
 
     elif 'inputs.conf' in filename:
         stanza_start_line = None
@@ -56,7 +56,7 @@ def suggest_updates(file_path):
             suggestions += analyze_stanza(stanza_start_line, stanza_lines)
 
         if not suggestions:
-            suggestions.append("✔ No issues found in inputs.conf.")
+            suggestions.append("✅ No issues found in inputs.conf.")
 
     else:
         suggestions.append("⚠ Unknown config file. No analysis performed.")
@@ -75,7 +75,7 @@ def analyze_stanza(start_line, stanza_lines):
 
     if missing:
         return [f"❌ Stanza starting at line {start_line}: Missing {', '.join(missing)} ⚠"]
-    return [f"✔ Stanza starting at line {start_line}: All required keys are present."]
+    return [f"✅ Stanza starting at line {start_line}: All required keys are present."]
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
