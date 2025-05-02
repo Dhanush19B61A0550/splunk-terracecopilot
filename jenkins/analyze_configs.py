@@ -2,6 +2,10 @@ import os
 import sys
 import time
 import re
+import codecs
+
+# Force Python to use UTF-8 encoding for stdout (Windows compatibility)
+sys.stdout = codecs.getwriter('utf-8')(sys.stdout.detach())
 
 def suggest_updates(file_path):
     if not os.path.exists(file_path):
