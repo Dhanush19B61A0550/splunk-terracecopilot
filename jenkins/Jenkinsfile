@@ -1,16 +1,12 @@
 pipeline {
     agent any
-
+ 
     environment {
         GIT_REPO = 'https://github.com/Dhanush19B61A0550/splunk-terracecopilot.git'
         GIT_USER = 'Dhanush19B61A0550'
-        PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'  // Updated to the correct Python path on Windows
+        PYTHON_PATH = 'C:\\Users\\MTL1027\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'
     }
-
-    options {
-        ansiColor('xterm')  // Enable color output in Jenkins console
-    }
-
+ 
     stages {
         stage('Clone GitHub Repo') {
             steps {
@@ -18,14 +14,14 @@ pipeline {
                 git branch: 'main', url: "${GIT_REPO}"
             }
         }
-
+ 
         stage('Check for Config Changes') {
             steps {
                 script {
-                    echo 'Checking for changes in configuration files...'
+                    // Check for any changes in inputs.conf or other config files
                     def configChanges = bat(script: 'git status --porcelain configs/', returnStdout: true).trim()
                     echo "Git Status Output: ${configChanges}"
-
+ 
                     if (configChanges) {
                         echo 'Detected changes in config files. Preparing to commit.'
                         env.CONFIG_CHANGED = 'true'
@@ -36,74 +32,62 @@ pipeline {
                 }
             }
         }
-
+ 
         stage('Commit and Push Config Changes') {
             when {
                 expression { env.CONFIG_CHANGED == 'true' }
             }
             steps {
-                echo 'Committing and pushing config changes...'
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
                     bat """
                         git config --global user.name "jenkins-bot"
                         git config --global user.email "jenkins@example.com"
+ 
+                        // Force add the files to ensure changes are captured
                         git add configs/inputs.conf configs/outputs.conf
+                       
+                        // Check git status again to see if changes are staged
+                        git status
+                       
+                        // Commit and push the changes
                         git commit -m "Update configs from local changes"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Dhanush19B61A0550/splunk-terracecopilot.git HEAD:main
                     """
                 }
             }
         }
-
+ 
         stage('Run Config Analysis') {
-            parallel {
-                stage('Analyze inputs.conf') {
-                    steps {
-                        echo 'Running analysis on inputs.conf...'
-                        ansiColor('xterm') {
-                            bat """
-                                if not exist analysis_output mkdir analysis_output
-                                "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
-                            """
-                        }
-                    }
-                }
-
-                stage('Analyze outputs.conf') {
-                    steps {
-                        echo 'Running analysis on outputs.conf...'
-                        ansiColor('xterm') {
-                            bat """
-                                if not exist analysis_output mkdir analysis_output
-                                "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
-                            """
-                        }
-                    }
-                }
+            steps {
+                echo 'Running configuration analysis on config files...'
+                bat """
+                    if exist analysis_output rmdir /S /Q analysis_output
+                    mkdir analysis_output
+                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\inputs.conf > analysis_output\\inputs_suggestions.txt
+                    "${PYTHON_PATH}" jenkins\\analyze_configs.py configs\\outputs.conf > analysis_output\\outputs_suggestions.txt
+                """
             }
         }
-
+ 
         stage('Display Suggestions') {
             steps {
-                echo 'Displaying analysis suggestions...'
-                ansiColor('xterm') {
-                    bat """
-                        echo -----------------------
-                        echo Inputs.conf Suggestions:
-                        type analysis_output\\inputs_suggestions.txt
-                        echo -----------------------
-                        echo Outputs.conf Suggestions:
-                        type analysis_output\\outputs_suggestions.txt
-                        echo -----------------------
-                    """
-                }
+                echo 'Displaying AI suggestions:'
+                bat '''
+                    echo -----------------------
+                    echo Inputs.conf Suggestions:
+                    type analysis_output\\inputs_suggestions.txt
+                    echo -----------------------
+                    echo Outputs.conf Suggestions:
+                    type analysis_output\\outputs_suggestions.txt
+                    echo -----------------------
+                '''
             }
         }
-
+ 
         stage('Check for Suggestion Changes') {
             steps {
                 script {
-                    echo 'Checking for changes in suggestion files...'
+                    // Check if there are any changes in the suggestions
                     def suggestionChanges = bat(script: 'git status --porcelain analysis_output/', returnStdout: true).trim()
                     if (suggestionChanges) {
                         echo 'Detected changes in suggestions. Preparing to commit.'
@@ -115,13 +99,12 @@ pipeline {
                 }
             }
         }
-
+ 
         stage('Commit and Push Suggestions') {
             when {
                 expression { env.SUGGESTIONS_CHANGED == 'true' }
             }
             steps {
-                echo 'Committing and pushing suggestion changes...'
                 withCredentials([string(credentialsId: 'GIT_PASS', variable: 'GIT_TOKEN')]) {
                     bat """
                         git add analysis_output
@@ -132,23 +115,10 @@ pipeline {
             }
         }
     }
-
+ 
     post {
         always {
             echo 'Pipeline completed!'
-        }
-
-        success {
-            echo 'Pipeline executed successfully!'
-        }
-
-        failure {
-            echo 'Pipeline failed, please check the logs for details.'
-        }
-
-        cleanup {
-            echo 'Cleaning up temporary files...'
-            bat 'rd /s /q analysis_output'
         }
     }
 }
