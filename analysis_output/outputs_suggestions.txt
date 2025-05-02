@@ -1,2 +1,2 @@
 Analyzing configs\outputs.conf... (Simulating API Call)
-✔ No issues found in outputs.conf.
+✅ No issues found in outputs.conf.

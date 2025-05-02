@@ -1,16 +1,16 @@
 Analyzing configs\inputs.conf... (Simulating API Call)
-✔ Stanza starting at line 1: All required keys are present.
+✅ Stanza starting at line 1: All required keys are present.
 ❌ Stanza starting at line 6: Missing `disabled = true|false` ⚠
-✔ Stanza starting at line 11: All required keys are present.
-✔ Stanza starting at line 16: All required keys are present.
+✅ Stanza starting at line 11: All required keys are present.
+✅ Stanza starting at line 16: All required keys are present.
 ❌ Stanza starting at line 21: Missing `sourcetype = your_sourcetype` ⚠
-✔ Stanza starting at line 26: All required keys are present.
-✔ Stanza starting at line 31: All required keys are present.
+✅ Stanza starting at line 26: All required keys are present.
+✅ Stanza starting at line 31: All required keys are present.
 ❌ Stanza starting at line 37: Missing `sourcetype = your_sourcetype` ⚠
-✔ Stanza starting at line 41: All required keys are present.
+✅ Stanza starting at line 41: All required keys are present.
 ❌ Stanza starting at line 47: Missing `sourcetype = your_sourcetype` ⚠
-✔ Stanza starting at line 52: All required keys are present.
-✔ Stanza starting at line 58: All required keys are present.
-✔ Stanza starting at line 63: All required keys are present.
-✔ Stanza starting at line 69: All required keys are present.
-✔ Stanza starting at line 74: All required keys are present.
+✅ Stanza starting at line 52: All required keys are present.
+✅ Stanza starting at line 58: All required keys are present.
+✅ Stanza starting at line 63: All required keys are present.
+✅ Stanza starting at line 69: All required keys are present.
+✅ Stanza starting at line 74: All required keys are present.
